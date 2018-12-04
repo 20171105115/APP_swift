@@ -15,8 +15,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var name: UITextField!  //车名
     @IBOutlet weak var time: UITextField!   //停放或者出库的时间
     //停车场收费系统
-    @IBOutlet weak var housetext: UITextView!
-    @IBOutlet weak var rodestack: UITextView!
+    @IBOutlet weak var housetext: UITextView!  //显示存放在仓库里的车辆
+    @IBOutlet weak var rodestack: UITextView!  //显示存放在路边的车辆
+    @IBOutlet weak var prompt: UITextField!  //显示出车库时需要交的费用
     
     struct snode{
         var Carname : String
@@ -128,16 +129,26 @@ class ViewController: UIViewController {
         if carnumber <= num{
             Hstack.push(tempsnode)
             carnumber += 1
-            housetext.text("\(tempsnode.Carname)")
+            housetext.text = "车名为\(tempsnode.Carname) 车牌：\(tempsnode.number) 进库时间 ： \(tempsnode.time)\n"
         }else{
             RodeQueue.enqueue(element: tempsnode)
+            rodestack.text = "车名为\(tempsnode.Carname) 车牌：\(tempsnode.number) 停留路边时间 ： \(tempsnode.time)\n"
         }
-        
-        
+        name.text = ""
+        number.text = ""
+        time.text = ""
     }
     
     @IBAction func clearhouse(_ sender: Any) {
+        var tempsnode = snode(Carname: name.text!, time: Int(time.text!)!, number: Int(plateNumber.text!)!)
         
+        if carnumber <= num{
+            while(tempsnode.number != Hstack.top!.number){
+                Rstack.push(Hstack.pop()!)
+            }
+            prompt.text = "车牌号为\(Hstack.pop()!.number)的车辆出库，请交费\(2*Hstack.pop()!.time)元"
+            carnumber -= 1
+        }
     }
     
     
