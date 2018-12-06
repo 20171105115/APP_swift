@@ -20,9 +20,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var prompt: UITextField!  //显示出车库时需要交的费用
     
     struct snode{
-        var Carname : String
+        var Carname : String  //车名
         var time :Int = 0
-        var number : Int = 0
+        var number : String   //车牌号
     }
     
     public struct Stack<snode>{    //创建堆栈，模拟车库
@@ -124,30 +124,68 @@ class ViewController: UIViewController {
     
     @IBAction func openhouse(_ sender: Any) {
         
-        var tempsnode = snode(Carname: name.text!, time: Int(time.text!)!, number: Int(plateNumber.text!)!)
+        let tempsnode = snode(Carname: name.text!, time: Int(time.text!)!, number: plateNumber.text!)
         
-        if carnumber <= num{
+        if carnumber < num{
             Hstack.push(tempsnode)
             carnumber += 1
-            housetext.text = "车名为\(tempsnode.Carname) 车牌：\(tempsnode.number) 进库时间 ： \(tempsnode.time)\n"
+            housetext.text += "车名为\(tempsnode.Carname) 车牌：\(tempsnode.number) 进库时间 ： \(tempsnode.time)\n"
         }else{
             RodeQueue.enqueue(element: tempsnode)
-            rodestack.text = "车名为\(tempsnode.Carname) 车牌：\(tempsnode.number) 停留路边时间 ： \(tempsnode.time)\n"
+            rodestack.text += "车名为\(tempsnode.Carname) 车牌：\(tempsnode.number) 停留路边时间 ： \(tempsnode.time)\n"
         }
         name.text = ""
-        number.text = ""
+        plateNumber.text = ""
         time.text = ""
     }
+    func getNowTimeStamp() ->String{
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.dateFormat = "YYYY-MM-dd HH:mm:ss"//设置时间格式；hh——>12小时制， HH———>24小时制
+        
+        //设置时区
+        let timeZone = TimeZone.init(identifier: "Asia/Shanghai")
+        formatter.timeZone = timeZone
+        
+        let dateNow = Date()//当前的时间
+        //当前时间戳
+        let timeStamp = String.init(format: "%ld", Int(dateNow.timeIntervalSince1970))
+        return timeStamp
+    }
+ 
+    //let now = today.addingTimeInterval(TimeInterval(interval))//获取当前系统时间
     
     @IBAction func clearhouse(_ sender: Any) {
-        var tempsnode = snode(Carname: name.text!, time: Int(time.text!)!, number: Int(plateNumber.text!)!)
+        var tempsnode = snode(Carname: name.text!, time: Int(time.text!)!, number: plateNumber.text!)
         
-        if carnumber <= num{
+        if carnumber < num{
+            while(tempsnode.number != Hstack.top!.number){
+                housetext.text = "车牌号为\(Hstack.top!.number)的车辆出库为车牌号为\(tempsnode.number)的车辆让道\n"
+                carnumber -= 1
+                Rstack.push(Hstack.pop()!)
+            }
+            prompt.text = "车牌号为\(Hstack.top!.number)的车辆出库，请交费\(2*(tempsnode.time - Hstack.pop()!.time))元"
+            carnumber -= 1
+            while(!Rstack.isEmpty){
+                Hstack.push(Rstack.pop()!)
+                carnumber += 1
+            }
+            /*if carnumber < num{
+                rodestack.text = "车牌号为\(RodeQueue.peek()!.number)的车辆从路边进入车库,进库时间\(getNowTimeStamp())"
+                Hstack.push(RodeQueue.dequeue()!)
+            }*/
+        }else{
             while(tempsnode.number != Hstack.top!.number){
                 Rstack.push(Hstack.pop()!)
             }
-            prompt.text = "车牌号为\(Hstack.pop()!.number)的车辆出库，请交费\(2*Hstack.pop()!.time)元"
+            prompt.text = "车牌号为\(Hstack.pop()!.number)的车辆出库，出库时间\(tempsnode.time),请交费\(2*(tempsnode.time - Hstack.pop()!.time))元"
             carnumber -= 1
+            while(!Rstack.isEmpty){
+                Hstack.push(Rstack.pop()!)
+            }
+            rodestack.text = "车牌号为\(RodeQueue.peek()!.number)的车辆从路边进入车库,进库时间\(getNowTimeStamp())"
+            Hstack.push(RodeQueue.dequeue()!)
         }
     }
     
