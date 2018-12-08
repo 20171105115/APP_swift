@@ -129,10 +129,11 @@ class ViewController: UIViewController {
         if carnumber < num{
             Hstack.push(tempsnode)
             carnumber += 1
-            housetext.text += "车名为\(tempsnode.Carname) 车牌：\(tempsnode.number) 进库时间 ： \(tempsnode.time)\n"
+            housetext.text += "车名:\(tempsnode.Carname) 车牌：\(tempsnode.number) 进库时间 ： \(tempsnode.time)\n"
         }else{
             RodeQueue.enqueue(element: tempsnode)
-            rodestack.text += "车名为\(tempsnode.Carname) 车牌：\(tempsnode.number) 停留路边时间 ： \(tempsnode.time)\n"
+            carnumber += 1
+            rodestack.text += "车名:\(tempsnode.Carname) 车牌：\(tempsnode.number) 停留路边时间 ： \(tempsnode.time)\n"
         }
         name.text = ""
         plateNumber.text = ""
@@ -159,17 +160,28 @@ class ViewController: UIViewController {
     @IBAction func clearhouse(_ sender: Any) {
         var tempsnode = snode(Carname: name.text!, time: Int(time.text!)!, number: plateNumber.text!)
         
-        if carnumber < num{
+        if carnumber <= num{
             while(tempsnode.number != Hstack.top!.number){
-                housetext.text = "车牌号为\(Hstack.top!.number)的车辆出库为车牌号为\(tempsnode.number)的车辆让道\n"
-                carnumber -= 1
+                housetext.text += "车牌号为\(Hstack.top!.number)的车辆出库为车牌号为\(tempsnode.number)的车辆让道\n"
+                //carnumber -= 1
                 Rstack.push(Hstack.pop()!)
+                if Hstack.isEmpty{
+                    prompt.text = "车牌号为\(tempsnode.number)的车辆未放入车库"
+                    break
+                }
             }
-            prompt.text = "车牌号为\(Hstack.top!.number)的车辆出库，请交费\(2*(tempsnode.time - Hstack.pop()!.time))元"
-            carnumber -= 1
-            while(!Rstack.isEmpty){
-                Hstack.push(Rstack.pop()!)
-                carnumber += 1
+            if !Hstack.isEmpty{
+                prompt.text = "车牌号为\(Hstack.top!.number)的车辆出库，请交费\(2*(tempsnode.time - Hstack.pop()!.time))元"
+                carnumber -= 1
+                while(!Rstack.isEmpty){
+                    Hstack.push(Rstack.pop()!)
+                    //carnumber += 1
+                }
+                name.text = ""
+                plateNumber.text = ""
+                time.text = ""
+            }else{
+                housetext.text += "车库内无车\n"
             }
             /*if carnumber < num{
                 rodestack.text = "车牌号为\(RodeQueue.peek()!.number)的车辆从路边进入车库,进库时间\(getNowTimeStamp())"
@@ -177,17 +189,24 @@ class ViewController: UIViewController {
             }*/
         }else{
             while(tempsnode.number != Hstack.top!.number){
+                housetext.text += "车牌号为\(Hstack.top!.number)的车辆出库为车牌号为\(tempsnode.number)的车辆让道\n"
+                carnumber -= 1
                 Rstack.push(Hstack.pop()!)
             }
-            prompt.text = "车牌号为\(Hstack.pop()!.number)的车辆出库，出库时间\(tempsnode.time),请交费\(2*(tempsnode.time - Hstack.pop()!.time))元"
+            prompt.text = "车牌号为\(Hstack.top!.number)的车辆出库，出库时间\(tempsnode.time),请交费\(2*(tempsnode.time - Hstack.pop()!.time))元"
             carnumber -= 1
             while(!Rstack.isEmpty){
                 Hstack.push(Rstack.pop()!)
             }
-            rodestack.text = "车牌号为\(RodeQueue.peek()!.number)的车辆从路边进入车库,进库时间\(getNowTimeStamp())"
+            rodestack.text += "车牌号为\(RodeQueue.peek()!.number)的车辆离开路边,离开时间时间\(tempsnode.time)\n"
+            housetext.text += "车牌号为\(RodeQueue.peek()!.number)的车辆从路边进入车库,进库时间\(tempsnode.time)\n"
             Hstack.push(RodeQueue.dequeue()!)
         }
+        name.text = ""
+        plateNumber.text = ""
+        time.text = ""
     }
+    
     
     
     override func viewDidLoad() {
