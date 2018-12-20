@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var number: UITextField!
     @IBOutlet weak var plateNumber: UITextField!  //车牌号
     @IBOutlet weak var name: UITextField!  //车名
-    @IBOutlet weak var time: UITextField!   //停放或者出库的时间
+    
     //停车场收费系统
     @IBOutlet weak var housetext: UITextView!  //显示存放在仓库里的车辆
     @IBOutlet weak var rodestack: UITextView!  //显示存放在路边的车辆
@@ -21,7 +21,8 @@ class ViewController: UIViewController {
     
     struct snode{
         var Carname : String  //车名
-        var time :Int = 0
+        var time :String      //用于计算的时间
+        var time1 :String      //用于输出的时间
         var number : String   //车牌号
     }
     
@@ -120,58 +121,62 @@ class ViewController: UIViewController {
     }
     
     //var tempsnode : snode //声明临时结构体
-    
-    
-    @IBAction func openhouse(_ sender: Any) {
-        
-        let tempsnode = snode(Carname: name.text!, time: Int(time.text!)!, number: plateNumber.text!)
-        
-        if carnumber < num{
-            Hstack.push(tempsnode)
-            carnumber += 1
-            housetext.text += "\(currentTime()) 车名:\(tempsnode.Carname) 车牌：\(tempsnode.number) 进库时间 ： \(tempsnode.time)\n"
-        }else{
-            RodeQueue.enqueue(element: tempsnode)
-            carnumber += 1
-            rodestack.text += "\(currentTime()) 车名:\(tempsnode.Carname) 车牌：\(tempsnode.number) 停留路边时间 ： \(tempsnode.time)\n"
-        }
-        name.text = ""
-        plateNumber.text = ""
-        time.text = ""
-    }
-    
     func currentTime() -> String {
+        let dateformatter = DateFormatter()
+        dateformatter.dateFormat = "HHmmss"
+        return dateformatter.string(from: Date())
+    }
+    func currentTime1() ->String {
         let dateformatter = DateFormatter()
         dateformatter.dateFormat = "HH:mm:ss"
         return dateformatter.string(from: Date())
     }
-
- 
+    
+    @IBAction func openhouse(_ sender: Any) {
+        
+        let tempsnode = snode(Carname: name.text!, time: currentTime(),time1:currentTime1(), number: plateNumber.text!)
+        
+        if carnumber < num{
+            Hstack.push(tempsnode)
+            carnumber += 1
+            housetext.text += "\(currentTime1()) 车名:\(tempsnode.Carname) 车牌：\(tempsnode.number) 进库时间 ： \(tempsnode.time1)\n"
+        }else{
+            RodeQueue.enqueue(element: tempsnode)
+            carnumber += 1
+            rodestack.text += "\(currentTime1()) 车名:\(tempsnode.Carname) 车牌：\(tempsnode.number) 停留路边时间 ： \(tempsnode.time1)\n"
+        }
+        name.text = ""
+        plateNumber.text = ""
+    }
     //let now = today.addingTimeInterval(TimeInterval(interval))//获取当前系统时间
     
     @IBAction func clearhouse(_ sender: Any) {
-        let tempsnode = snode(Carname: name.text!, time: Int(time.text!)!, number: plateNumber.text!)
+        let tempsnode = snode(Carname: name.text!, time: currentTime(),time1:currentTime1(), number: plateNumber.text!)
         
         if carnumber <= num{
-            while(tempsnode.number != Hstack.top!.number){
-                Rstack.push(Hstack.pop()!)
-                if Hstack.isEmpty{   //如果车库为空，说明没有找到
-                    prompt.text = "\(currentTime()) 车牌号为\(tempsnode.number)的车辆未放入车库"
-                    break
+            if !Hstack.isEmpty{
+                while(tempsnode.number != Hstack.top!.number){
+                    Rstack.push(Hstack.pop()!)
+                    if Hstack.isEmpty{   //如果车库为空，说明没有找到
+                        prompt.text = "\(currentTime1()) 车牌号为\(tempsnode.number)的车辆未放入车库"
+                        break
+                    }
                 }
+            }else{
+                prompt.text = "车库为空\n"
             }
             if !Hstack.isEmpty{  //找到了
-                prompt.text = "\(currentTime()) 车牌号为\(Hstack.top!.number)的车辆出库，请交费\(2*(tempsnode.time - Hstack.top!.time))元)"
-                housetext.text += "\(currentTime()) 车牌号为\(Hstack.pop()!.number)的车辆出库 \n"
+                prompt.text = "\(currentTime1()) 车牌号为\(Hstack.top!.number)的车辆出库，请交费\(2*(Int(tempsnode.time)! - Int(Hstack.top!.time)!))元)"
+                housetext.text += "\(currentTime1()) 车牌号为\(Hstack.pop()!.number)的车辆出库 \n"
                 carnumber -= 1
                 while(!Rstack.isEmpty){
                     Hstack.push(Rstack.pop()!)
                 }
                 name.text = ""
                 plateNumber.text = ""
-                time.text = ""
+                
             }else{   //没有找到
-                housetext.text += "\(currentTime()) 车库内无车\n"
+                housetext.text += "\(currentTime1()) 车库内无车\n"
                 while(!Rstack.isEmpty){//将出去的车停放回来
                     Hstack.push(Rstack.pop()!)
                 }
@@ -185,26 +190,26 @@ class ViewController: UIViewController {
                 }
             }
             if Hstack.isEmpty{
-                prompt.text = "\(currentTime()) 车牌号为\(tempsnode.number)的车辆未放入车库 "
+                prompt.text = "\(currentTime1()) 车牌号为\(tempsnode.number)的车辆未放入车库 "
                 //Hstack.push(Rstack.pop()!)
             }else{
-                prompt.text = "\(currentTime()) 车牌号为\(Hstack.top!.number)的车辆出库，出库时间:\(tempsnode.time),请交费\(2*(tempsnode.time - Hstack.top!.time))元"
-                housetext.text += "\(currentTime()) 车牌号为\(Hstack.pop()!.number)的车辆出库 \n"
+                prompt.text = "\(currentTime1()) 车牌号为\(Hstack.top!.number)的车辆出库，出库时间:\(tempsnode.time1),请交费\(2*(Int(tempsnode.time)! - Int(Hstack.top!.time)!))元"
+                housetext.text += "\(currentTime1()) 车牌号为\(Hstack.pop()!.number)的车辆出库 \n"
                 carnumber -= 1
                 while(!Rstack.isEmpty){
                     Hstack.push(Rstack.pop()!)
                 }
                 
-                rodestack.text += "\(currentTime()) 车牌号为\(RodeQueue.peek()!.number)的车辆离开路边,离开时间时间\(tempsnode.time)     \n"
-                housetext.text += "\(currentTime()) 车牌号为\(RodeQueue.peek()!.number)的车辆从路边进入车库,进库时间\(tempsnode.time)   \n"
+                rodestack.text += "\(currentTime1()) 车牌号为\(RodeQueue.peek()!.number)的车辆离开路边,离开时间时间\(tempsnode.time1)     \n"
+                housetext.text += "\(currentTime1()) 车牌号为\(RodeQueue.peek()!.number)的车辆从路边进入车库,进库时间\(tempsnode.time1)   \n"
                 Hstack.push(RodeQueue.dequeue()!)
             }
         }
         name.text = ""
         plateNumber.text = ""
-        time.text = ""
+        
+        
     }
-    
     
     
     override func viewDidLoad() {
